@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { GET_SERVICES_URL } from '../apiConfig';
 import './GoingAbroad.css';
 
 const GoingAbroad = () => {
@@ -17,11 +18,11 @@ const GoingAbroad = () => {
       setLoading(true);
       setError(null);
 
-      // Support port 5001 (macOS AirPlay safe) and port 5000
       let response;
       try {
-        response = await fetch('http://localhost:5001/api/services/going-abroad');
+        response = await fetch(GET_SERVICES_URL);
       } catch {
+        // Fallback to local port 5000 if 5001 fails
         response = await fetch('http://localhost:5000/api/services/going-abroad');
       }
 

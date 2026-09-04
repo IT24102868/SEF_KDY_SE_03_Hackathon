@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, Navigate } from 'react-router-dom';
+import { GET_SERVICES_URL } from '../apiConfig';
 import './ServiceDetails.css';
 
 const ServiceDetails = () => {
@@ -54,7 +55,7 @@ const ServiceDetails = () => {
       try {
         let response;
         try {
-          response = await fetch('http://localhost:5001/api/services/going-abroad');
+          response = await fetch(GET_SERVICES_URL);
         } catch {
           response = await fetch('http://localhost:5000/api/services/going-abroad');
         }
