@@ -74,6 +74,26 @@ const goingAbroadServices = [
     ],
     officialSource: 'https://services.police.lk',
   },
+
+  {
+    _id: "srv_revenue_005",
+    title: "Vehicle Revenue License Renewal",
+    description: "Renew your annual vehicle revenue license easily through the online provincial portal to avoid late payment penalties.",
+    steps: [
+      "Ensure your vehicle has a valid emission test certificate (valid for the upcoming year).",
+      "Ensure your vehicle insurance policy is current and covers the renewal period.",
+      "Visit the respective Provincial Motor Traffic Department online portal.",
+      "Enter your vehicle registration number and details to view payment status.",
+      "Pay the license fee online and download the renewed Revenue License document."
+    ],
+    requiredDocuments: [
+      "Valid Vehicle Insurance policy",
+      "Valid Vehicle Emission Test Certificate",
+      "Vehicle Registration Book (CR)",
+      "Previous Revenue License copy"
+    ],
+    officialSource: "https://motortraffic.wp.gov.lk"
+  },
 ];
 
 // GET /api/services/going-abroad - Returns the 3 services for going abroad
