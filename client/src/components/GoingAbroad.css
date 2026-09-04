@@ -119,6 +119,76 @@
   gap: 0.35rem;
 }
 
+/* Search / Filter Controls */
+.ga-search-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.ga-search-input-wrapper {
+  position: relative;
+  flex: 1;
+  min-width: 280px;
+}
+
+.ga-search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 1rem;
+  pointer-events: none;
+}
+
+.ga-search-input {
+  width: 100%;
+  padding: 0.8rem 2.5rem 0.8rem 2.75rem;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 0.98rem;
+  color: #1e293b;
+  background-color: #ffffff;
+  box-shadow: var(--shadow-sm);
+  outline: none;
+  box-sizing: border-box;
+  transition: var(--transition);
+}
+
+.ga-search-input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+.ga-search-clear {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  line-height: 1;
+}
+
+.ga-search-clear:hover {
+  color: #334155;
+}
+
+.ga-results-count {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
 /* Services Grid */
 .services-grid {
   display: flex;
@@ -397,4 +467,35 @@
 
 .retry-button:hover {
   background-color: var(--primary-hover);
+}
+
+.no-results-container {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  border: 1px dashed var(--border-color);
+  color: var(--text-muted);
+}
+
+.no-results-container h4 {
+  margin: 0 0 0.5rem 0;
+  color: #334155;
+  font-size: 1.15rem;
+}
+
+.clear-search-btn {
+  margin-top: 0.75rem;
+  background: var(--primary-light);
+  color: var(--primary-color);
+  border: 1px solid #c7d2fe;
+  padding: 0.4rem 1rem;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.clear-search-btn:hover {
+  background: #e0e7ff;
 }

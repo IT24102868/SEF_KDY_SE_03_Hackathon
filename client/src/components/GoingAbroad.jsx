@@ -9,6 +9,9 @@ const GoingAbroad = () => {
   // Local state to track which service IDs are added to "My Journey"
   const [journeyItems, setJourneyItems] = useState([]);
 
+  // Local state for real-time search/filter by title
+  const [searchTerm, setSearchTerm] = useState('');
+
   const fetchServices = async () => {
     try {
       setLoading(true);
@@ -70,7 +73,7 @@ const GoingAbroad = () => {
           <div className="error-title">⚠️ Failed to Load Services</div>
           <p style={{ color: '#64748b' }}>{error}</p>
           <p style={{ fontSize: '0.88rem', color: '#94a3b8', marginTop: '0.5rem' }}>
-            Ensure your backend server is running at <code>http://localhost:5000</code>
+            Ensure your backend server is running at <code>http://localhost:5001</code>
           </p>
           <button className="retry-button" onClick={fetchServices}>
             Retry Connection
@@ -80,8 +83,13 @@ const GoingAbroad = () => {
     );
   }
 
-  // Selected services for summary display
+  // Selected services for journey summary display
   const selectedServices = services.filter((s) => journeyItems.includes(s._id));
+
+  // Real-time title filter logic
+  const filteredServices = services.filter((service) =>
+    service.title.toLowerCase().includes(searchTerm.toLowerCase().trim())
+  );
 
   return (
     <div className="going-abroad-container">
@@ -119,99 +127,135 @@ const GoingAbroad = () => {
         )}
       </div>
 
+      {/* Real-time Search / Filter Input */}
+      <div className="ga-search-container">
+        <div className="ga-search-input-wrapper">
+          <span className="ga-search-icon">🔍</span>
+          <input
+            type="text"
+            className="ga-search-input"
+            placeholder="Search services by title (e.g. Passport, Visa, Police Clearance)..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          {searchTerm && (
+            <button
+              className="ga-search-clear"
+              onClick={() => setSearchTerm('')}
+              title="Clear search"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+        <div className="ga-results-count">
+          Showing {filteredServices.length} of {services.length} services
+        </div>
+      </div>
+
       {/* Services Cards List */}
       <div className="services-grid">
-        {services.map((service) => {
-          const isAdded = journeyItems.includes(service._id);
+        {filteredServices.length === 0 ? (
+          <div className="no-results-container">
+            <h4>No services found matching "{searchTerm}"</h4>
+            <p>Try searching with a different title or keyword.</p>
+            <button className="clear-search-btn" onClick={() => setSearchTerm('')}>
+              Clear Filter
+            </button>
+          </div>
+        ) : (
+          filteredServices.map((service) => {
+            const isAdded = journeyItems.includes(service._id);
 
-          return (
-            <div
-              key={service._id}
-              className={`service-card ${isAdded ? 'selected' : ''}`}
-            >
-              {/* Card Top Row */}
-              <div className="card-header-row">
-                <div className="card-title-group">
-                  <h2 className="card-title">{service.title}</h2>
-                  <p className="card-description">{service.description}</p>
+            return (
+              <div
+                key={service._id}
+                className={`service-card ${isAdded ? 'selected' : ''}`}
+              >
+                {/* Card Top Row */}
+                <div className="card-header-row">
+                  <div className="card-title-group">
+                    <h2 className="card-title">{service.title}</h2>
+                    <p className="card-description">{service.description}</p>
+                  </div>
+
+                  {/* Checkbox: Add to My Journey */}
+                  <div className="journey-toggle-container">
+                    <label
+                      htmlFor={`journey-check-${service._id}`}
+                      className={`journey-checkbox-label ${isAdded ? 'checked' : ''}`}
+                    >
+                      <input
+                        type="checkbox"
+                        id={`journey-check-${service._id}`}
+                        className="journey-checkbox"
+                        checked={isAdded}
+                        onChange={() => handleToggleJourney(service._id)}
+                      />
+                      <span>{isAdded ? 'In My Journey' : 'Add to My Journey'}</span>
+                    </label>
+                  </div>
                 </div>
 
-                {/* Checkbox: Add to My Journey */}
-                <div className="journey-toggle-container">
-                  <label
-                    htmlFor={`journey-check-${service._id}`}
-                    className={`journey-checkbox-label ${isAdded ? 'checked' : ''}`}
-                  >
-                    <input
-                      type="checkbox"
-                      id={`journey-check-${service._id}`}
-                      className="journey-checkbox"
-                      checked={isAdded}
-                      onChange={() => handleToggleJourney(service._id)}
-                    />
-                    <span>{isAdded ? 'In My Journey' : 'Add to My Journey'}</span>
-                  </label>
-                </div>
-              </div>
+                {/* Card Content: Steps & Required Documents */}
+                <div className="card-body-grid">
+                  {/* Steps Section */}
+                  <div className="card-section">
+                    <h4 className="section-subtitle">
+                      <span>📋</span> Procedure & Steps
+                    </h4>
+                    {service.steps && service.steps.length > 0 ? (
+                      <ol className="steps-list">
+                        {service.steps.map((step, idx) => (
+                          <li key={idx}>{step}</li>
+                        ))}
+                      </ol>
+                    ) : (
+                      <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>No steps specified.</p>
+                    )}
+                  </div>
 
-              {/* Card Content: Steps & Required Documents */}
-              <div className="card-body-grid">
-                {/* Steps Section */}
-                <div className="card-section">
-                  <h4 className="section-subtitle">
-                    <span>📋</span> Procedure & Steps
-                  </h4>
-                  {service.steps && service.steps.length > 0 ? (
-                    <ol className="steps-list">
-                      {service.steps.map((step, idx) => (
-                        <li key={idx}>{step}</li>
-                      ))}
-                    </ol>
-                  ) : (
-                    <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>No steps specified.</p>
+                  {/* Required Documents Section */}
+                  <div className="card-section">
+                    <h4 className="section-subtitle">
+                      <span>📁</span> Required Documents
+                    </h4>
+                    {service.requiredDocuments && service.requiredDocuments.length > 0 ? (
+                      <ul className="docs-list">
+                        {service.requiredDocuments.map((doc, idx) => (
+                          <li key={idx}>
+                            <span className="doc-bullet">•</span>
+                            <span>{doc}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>No documents required.</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Card Footer: Official Source & Status */}
+                <div className="card-footer">
+                  {service.officialSource && (
+                    <a
+                      href={service.officialSource}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="official-source-link"
+                    >
+                      <span>🔗</span> Official Source Portal: {service.officialSource.replace(/^https?:\/\//, '')} ↗
+                    </a>
                   )}
-                </div>
 
-                {/* Required Documents Section */}
-                <div className="card-section">
-                  <h4 className="section-subtitle">
-                    <span>📁</span> Required Documents
-                  </h4>
-                  {service.requiredDocuments && service.requiredDocuments.length > 0 ? (
-                    <ul className="docs-list">
-                      {service.requiredDocuments.map((doc, idx) => (
-                        <li key={idx}>
-                          <span className="doc-bullet">•</span>
-                          <span>{doc}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>No documents required.</p>
-                  )}
+                  <div className={`status-indicator ${isAdded ? 'added' : 'not-added'}`}>
+                    {isAdded ? '✅ Added to Journey Tracker' : '⚪ Not in your journey'}
+                  </div>
                 </div>
               </div>
-
-              {/* Card Footer: Official Source & Status */}
-              <div className="card-footer">
-                {service.officialSource && (
-                  <a
-                    href={service.officialSource}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="official-source-link"
-                  >
-                    <span>🔗</span> Official Source Portal: {service.officialSource.replace(/^https?:\/\//, '')} ↗
-                  </a>
-                )}
-
-                <div className={`status-indicator ${isAdded ? 'added' : 'not-added'}`}>
-                  {isAdded ? '✅ Added to Journey Tracker' : '⚪ Not in your journey'}
-                </div>
-              </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
     </div>
   );
