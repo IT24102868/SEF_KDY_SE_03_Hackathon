@@ -76,6 +76,24 @@ const goingAbroadServices = [
   },
 
   {
+  "_id": "srv_tin_004",
+  "title": "Tax Identification Number (TIN) Registration",
+  "description": "Registering for a TIN is now a mandatory requirement for all citizens over 18 years of age in Sri Lanka. It is a quick online process.",
+  "steps": [
+    "Visit the Inland Revenue Department (IRD) e-Services portal (eservices.ird.gov.lk).",
+    "Select 'Registration' and fill in your personal details including NIC and mobile number.",
+    "Verify your mobile number via the OTP sent to your phone.",
+    "Once submitted, your TIN certificate will be generated and emailed to you.",
+    "Download and save a digital copy for your records and employment needs."
+  ],
+  "requiredDocuments": [
+    "National Identity Card (NIC) number",
+    "Active mobile phone number registered under your name",
+    "Valid email address"
+  ],
+  "officialSource": "https://eservices.ird.gov.lk"
+}
+  {
     _id: "srv_revenue_005",
     title: "Vehicle Revenue License Renewal",
     description: "Renew your annual vehicle revenue license easily through the online provincial portal to avoid late payment penalties.",
