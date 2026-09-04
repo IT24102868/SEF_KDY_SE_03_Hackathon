@@ -5,7 +5,7 @@
 export const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
   (import.meta.env.PROD
-    ? 'https://adultinlk-backend.onrender.com' // Replace with your exact Render backend URL once deployed
+    ? 'https://adultinlk-backendd.onrender.com'
     : 'http://localhost:5001');
 
 export const GET_SERVICES_URL = `${API_BASE_URL}/api/services/going-abroad`;
