@@ -3,6 +3,10 @@ import { Link } from 'react-router-dom';
 import './RegistrationForm.css';
 
 const RegistrationForm = ({ services: propServices, onRegisterSuccess }) => {
+  // Dynamic services list for dropdown
+  const [servicesList, setServicesList] = useState(propServices || []);
+  const [loadingServices, setLoadingServices] = useState(false);
+
   // Track if user is editing an already existing profile
   const [isEditMode, setIsEditMode] = useState(false);
 
@@ -10,6 +14,7 @@ const RegistrationForm = ({ services: propServices, onRegisterSuccess }) => {
   const [formData, setFormData] = useState(() => {
     try {
       const savedProfile = localStorage.getItem('userProfile');
+      const savedServiceId = localStorage.getItem('selectedServiceId');
       if (savedProfile) {
         const parsed = JSON.parse(savedProfile);
         return {
@@ -17,6 +22,7 @@ const RegistrationForm = ({ services: propServices, onRegisterSuccess }) => {
           gender: parsed.gender || '',
           age: parsed.age !== undefined && parsed.age !== null ? String(parsed.age) : '',
           nicNumber: parsed.nic || parsed.nicNumber || '',
+          selectedServiceId: parsed.selectedServiceId || savedServiceId || '',
           preferredService: parsed.preferredService || '',
         };
       }
@@ -28,6 +34,7 @@ const RegistrationForm = ({ services: propServices, onRegisterSuccess }) => {
       gender: '',
       age: '',
       nicNumber: '',
+      selectedServiceId: '',
       preferredService: '',
     };
   });
@@ -35,13 +42,9 @@ const RegistrationForm = ({ services: propServices, onRegisterSuccess }) => {
   // Validation errors state
   const [errors, setErrors] = useState({});
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [submittedUser, setSubmittedUser] = useState(null);
 
-  // Dynamic services list for dropdown
-  const [servicesList, setServicesList] = useState(propServices || []);
-
+  // Fetch services from backend /api/services/going-abroad
   useEffect(() => {
-    // Check if profile exists to toggle edit mode label
     try {
       const savedProfile = localStorage.getItem('userProfile');
       if (savedProfile) {
@@ -54,8 +57,8 @@ const RegistrationForm = ({ services: propServices, onRegisterSuccess }) => {
     if (propServices && propServices.length > 0) {
       setServicesList(propServices);
     } else {
-      // Fallback fetch if services prop not provided directly
       const fetchServicesList = async () => {
+        setLoadingServices(true);
         try {
           let res;
           try {
@@ -66,9 +69,23 @@ const RegistrationForm = ({ services: propServices, onRegisterSuccess }) => {
           if (res.ok) {
             const data = await res.json();
             setServicesList(data);
+
+            // If user had a selectedServiceId or preferredService, make sure both are synchronized
+            setFormData((prev) => {
+              if (prev.selectedServiceId && !prev.preferredService) {
+                const found = data.find((s) => s._id === prev.selectedServiceId);
+                if (found) return { ...prev, preferredService: found.title };
+              } else if (!prev.selectedServiceId && prev.preferredService) {
+                const found = data.find((s) => s.title === prev.preferredService);
+                if (found) return { ...prev, selectedServiceId: found._id };
+              }
+              return prev;
+            });
           }
         } catch (err) {
           console.error('Error loading services for dropdown:', err);
+        } finally {
+          setLoadingServices(false);
         }
       };
       fetchServicesList();
@@ -121,8 +138,9 @@ const RegistrationForm = ({ services: propServices, onRegisterSuccess }) => {
         }
         break;
 
+      case 'selectedServiceId':
       case 'preferredService':
-        if (!value) {
+        if (!formData.selectedServiceId && !value) {
           error = 'Please select a preferred service';
         }
         break;
@@ -134,13 +152,23 @@ const RegistrationForm = ({ services: propServices, onRegisterSuccess }) => {
     return error;
   };
 
-  // Handle individual input changes
+  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+
+    if (name === 'selectedServiceId') {
+      const selectedService = servicesList.find((s) => s._id === value);
+      setFormData((prev) => ({
+        ...prev,
+        selectedServiceId: value,
+        preferredService: selectedService ? selectedService.title : '',
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
 
     if (isSubmitted) {
       const fieldError = validateField(name, value);
@@ -171,76 +199,50 @@ const RegistrationForm = ({ services: propServices, onRegisterSuccess }) => {
 
     const isValid = validateAll();
     if (isValid) {
-      // 1. Prepare user profile object (preserving original created date if updating)
-      let originalRegisteredAt = new Date().toISOString();
-      try {
-        const existing = localStorage.getItem('userProfile');
-        if (existing) {
-          const parsed = JSON.parse(existing);
-          if (parsed.registeredAt) originalRegisteredAt = parsed.registeredAt;
-        }
-      } catch (e) {
-        console.error(e);
-      }
-
+      // 1. Prepare user profile object
       const userProfileData = {
         name: formData.name.trim(),
         gender: formData.gender,
         age: Number(formData.age),
         nic: formData.nicNumber.trim(),
         nicNumber: formData.nicNumber.trim(),
+        selectedServiceId: formData.selectedServiceId,
         preferredService: formData.preferredService,
-        registeredAt: originalRegisteredAt,
         updatedAt: new Date().toISOString(),
       };
 
-      // 2. Save into localStorage under key 'userProfile'
+      // 2. Save User Profile AND selectedServiceId into localStorage
       try {
         localStorage.setItem('userProfile', JSON.stringify(userProfileData));
+        if (formData.selectedServiceId) {
+          localStorage.setItem('selectedServiceId', formData.selectedServiceId);
+        }
       } catch (storageError) {
-        console.error('Error saving userProfile to localStorage:', storageError);
+        console.error('Error saving to localStorage:', storageError);
       }
 
-      // 3. Trigger optional callback
       if (onRegisterSuccess) {
         onRegisterSuccess(userProfileData);
       }
 
-      // 4. Redirect to /dashboard
-      window.location.href = '/dashboard';
+      // 3. Redirect to /service-details as requested
+      window.location.href = '/service-details';
     }
   };
 
   return (
     <div className="registration-container">
       <div className="registration-header">
-        {isEditMode && (
-          <span className="form-header-badge">✏️ Edit Mode</span>
-        )}
+        {isEditMode && <span className="form-header-badge">✏️ Edit Mode</span>}
         <h2>
-          {isEditMode ? 'Edit Your AdultinLK Profile' : '📝 AdultinLK User Registration'}
+          {isEditMode ? 'Edit Your AdultinLK Profile' : '📝 Step 1: User Registration'}
         </h2>
         <p>
           {isEditMode
-            ? 'Update the fields you want to change below and save your profile.'
-            : 'Register your details to start your Going Abroad journey.'}
+            ? 'Update the fields you want to change below and view your service details.'
+            : 'Fill in your details and pick your target service to get personalized documentation guidance.'}
         </p>
       </div>
-
-      {submittedUser && (
-        <div className="success-alert">
-          <div className="success-alert-header">
-            <h4>🎉 Profile Saved!</h4>
-            <button className="reset-form-btn" onClick={() => setSubmittedUser(null)}>
-              Dismiss
-            </button>
-          </div>
-          <p className="success-details">
-            Welcome, <strong>{submittedUser.name}</strong>! Your preference for{' '}
-            <strong>{submittedUser.preferredService}</strong> has been updated.
-          </p>
-        </div>
-      )}
 
       <form className="registration-form" onSubmit={handleSubmit} noValidate>
         {/* Name Field */}
@@ -262,7 +264,7 @@ const RegistrationForm = ({ services: propServices, onRegisterSuccess }) => {
 
         {/* Gender & Age Row */}
         <div className="form-row">
-          {/* Gender Select Dropdown */}
+          {/* Gender Select */}
           <div className="form-group">
             <label className="form-label" htmlFor="reg-gender">
               Gender <span className="required-asterisk">*</span>
@@ -322,37 +324,39 @@ const RegistrationForm = ({ services: propServices, onRegisterSuccess }) => {
           {errors.nicNumber && <span className="error-message">⚠️ {errors.nicNumber}</span>}
         </div>
 
-        {/* Preferred Service Dropdown */}
+        {/* Preferred Service Dropdown (fetched from /api/services/going-abroad) */}
         <div className="form-group">
           <label className="form-label" htmlFor="reg-service">
             Preferred Service <span className="required-asterisk">*</span>
           </label>
           <select
             id="reg-service"
-            name="preferredService"
-            className={`form-select ${errors.preferredService ? 'has-error' : ''}`}
-            value={formData.preferredService}
+            name="selectedServiceId"
+            className={`form-select ${errors.selectedServiceId ? 'has-error' : ''}`}
+            value={formData.selectedServiceId}
             onChange={handleChange}
           >
-            <option value="">-- Select Preferred Service --</option>
+            <option value="">
+              {loadingServices ? 'Loading services from backend...' : '-- Select Target Service --'}
+            </option>
             {servicesList.map((service) => (
-              <option key={service._id || service.title} value={service.title}>
+              <option key={service._id} value={service._id}>
                 {service.title}
               </option>
             ))}
           </select>
-          {errors.preferredService && (
-            <span className="error-message">⚠️ {errors.preferredService}</span>
+          {errors.selectedServiceId && (
+            <span className="error-message">⚠️ {errors.selectedServiceId}</span>
           )}
         </div>
 
         {/* Action Buttons */}
         <div className="form-actions-row">
           <button type="submit" className="submit-btn">
-            {isEditMode ? '💾 Save Changes & Return to Dashboard' : 'Complete Registration'}
+            Proceed to Service Details ➡️
           </button>
           {isEditMode && (
-            <Link to="/dashboard" className="cancel-edit-btn">
+            <Link to="/service-details" className="cancel-edit-btn">
               Cancel
             </Link>
           )}

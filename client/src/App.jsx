@@ -1,8 +1,10 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, NavLink, Navigate } from 'react-router-dom';
-import GoingAbroad from './components/GoingAbroad';
+import Home from './components/Home';
 import RegistrationForm from './components/RegistrationForm';
+import ServiceDetails from './components/ServiceDetails';
 import Dashboard from './components/Dashboard';
+import GoingAbroad from './components/GoingAbroad';
 import './App.css';
 
 function App() {
@@ -21,7 +23,7 @@ function App() {
               className={({ isActive }) => `nav-link-item ${isActive ? 'active' : ''}`}
               end
             >
-              ✈️ Services
+              🏠 Home
             </NavLink>
             <NavLink
               to="/register"
@@ -30,20 +32,28 @@ function App() {
               📝 Register
             </NavLink>
             <NavLink
+              to="/service-details"
+              className={({ isActive }) => `nav-link-item ${isActive ? 'active' : ''}`}
+            >
+              📄 Service Details
+            </NavLink>
+            <NavLink
               to="/dashboard"
               className={({ isActive }) => `nav-link-item ${isActive ? 'active' : ''}`}
             >
-              📊 My Dashboard
+              📊 Dashboard
             </NavLink>
           </nav>
         </header>
 
-        {/* Page Content Body & Routing */}
+        {/* Sequential Routing */}
         <main className="app-content-body">
           <Routes>
-            <Route path="/" element={<GoingAbroad />} />
+            <Route path="/" element={<Home />} />
             <Route path="/register" element={<RegistrationForm />} />
+            <Route path="/service-details" element={<ServiceDetails />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/services" element={<GoingAbroad />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
